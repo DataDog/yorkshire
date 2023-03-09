@@ -1,0 +1,19 @@
+Component,Origin,License,Copyright
+attrs,PyPI,MIT,Hynek Schlawack
+certifi,PyPI,MPL-2.0,Kenneth Reitz
+charset-normalizer,PyPI,MIT,Ahmed TAHRI
+click,PyPI,BSD-3-Clause,Armin Ronacher
+daiquiri,PyPI,Apache-2.0,Julien Danjou
+idna,PyPI,BSD,Kim Davies
+markdown-it-py,PyPI,MIT,Chris Sewell
+mdurl,PyPI,MIT,Taneli Hukkinen
+packaging,PyPI,Apache-2.0,Donald Stufft
+pip-requirements-parser,PyPI,MIT,"The pip authors, nexB. Inc. and others"
+pygments,PyPI,BSD-2-Clause,Georg Brandl
+pyparsing,PyPI,MIT,Paul McGuire
+python-json-logger,PyPI,BSD,Zakaria Zajac
+requests,PyPI,Apache-2.0,Kenneth Reitz
+rich,PyPI,MIT,Will McGugan
+rich-click,PyPI,MIT,Phil Ewels
+tomli,PyPI,MIT,Taneli Hukkinen
+urllib3,PyPI,MIT,Andrey Petrov

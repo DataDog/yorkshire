@@ -1,0 +1,5 @@
+-i https://pypi.org/simple
+-f https://github.com/NVIDIA/Torch-TensorRT/releases
+
+requests
+torch-tensorrt

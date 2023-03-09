@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "foo"
+version = "1.0.0"
+description = "Datadog package"
+authors = ["Datadog <packages@datadoghq.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+flask = "^2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
