@@ -241,11 +241,11 @@ def detect(path: str) -> bool:
         _LOGGER.debug("Downloading from %r", path)
         response = requests.get(url)
         if response.status_code == 403 and (urlparse(url).netloc in ("github.com", "githubusercontent.com")):
-            raise GithubRateLimitError(f"Unable to download {url} due to rate limit ({response.status_code}): {response.text}")
+            raise GithubRateLimitError(f"Unable to download {path} due to rate limit ({response.status_code}): {response.text}")
         if response.status_code == 404:
-            raise DownloadFileError(f"{url} not found, check full path ({response.status_code}): {response.text}")
+            raise DownloadFileError(f"{path} not found, check full path ({response.status_code}): {response.text}")
         if response.status_code != 200:
-            raise DownloadFileError(f"Unable to download {url} ({response.status_code}): {response.text}")
+            raise DownloadFileError(f"Unable to download {path}: ({response.status_code}): {response.text}")
 
         with tempfile.NamedTemporaryFile(mode="w") as tmpfile:
             with open(tmpfile.name, "w") as f:
