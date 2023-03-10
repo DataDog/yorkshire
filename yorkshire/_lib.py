@@ -251,6 +251,6 @@ def detect(path: str) -> bool:
             with open(tmpfile.name, "w") as f:
                 f.write(response.text)
 
-            return detect_file(tmpfile.name,  _real_path=path)    
+            return detect_file(tmpfile.name, _real_path=path)
     else:
         raise UnknownFileError(f"The given path {path} is not a file, directory or URL")
