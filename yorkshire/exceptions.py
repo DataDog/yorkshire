@@ -15,3 +15,6 @@ class DownloadFileError(YorkshireException):
 
 class FileParseError(YorkshireException):
     """An exception raised when cannot parse the given requirements file."""
+
+class GithubRateLimitError(DownloadFileError):
+    """An exception was raised while downloading a remote requirments file because of rate limiting from Github."""
