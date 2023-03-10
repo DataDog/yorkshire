@@ -12,11 +12,12 @@ import requests
 import tomli
 from pip_requirements_parser import RequirementsFile
 from pip_requirements_parser import OptionLine
-
+from urllib.parse import urlparse
 
 from .exceptions import UnknownFileError
 from .exceptions import DownloadFileError
 from .exceptions import FileParseError
+from .exceptions import GithubRateLimitError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -235,15 +236,21 @@ def detect(path: str) -> bool:
         _LOGGER.debug("Checking file %r", path)
         return detect_file(path)
     elif path.startswith(("https://", "http://")):
+        url = path
+        path = urlparse(url)._replace(query="", params="", fragment="").geturl()
         _LOGGER.debug("Downloading from %r", path)
-        response = requests.get(path)
+        response = requests.get(url)
+        if response.status_code == 403 and (urlparse(url).netloc in ("github.com", "githubusercontent.com")):
+            raise GithubRateLimitError(f"Unable to download {path} due to rate limit ({response.status_code}): {response.text}")
+        if response.status_code == 404:
+            raise DownloadFileError(f"{path} not found, check full path ({response.status_code}): {response.text}")
         if response.status_code != 200:
-            raise DownloadFileError(f"Unable to download {path} ({response.status_code}): {response.text}")
+            raise DownloadFileError(f"Unable to download {path}: ({response.status_code}): {response.text}")
 
         with tempfile.NamedTemporaryFile(mode="w") as tmpfile:
             with open(tmpfile.name, "w") as f:
                 f.write(response.text)
 
-            return detect_file(tmpfile.name, _real_path=path)
+            return detect_file(tmpfile.name,  _real_path=path)    
     else:
         raise UnknownFileError(f"The given path {path} is not a file, directory or URL")
