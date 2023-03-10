@@ -238,7 +238,7 @@ def detect(path: str) -> bool:
     elif path.startswith(("https://", "http://")):
         url = path
         path = urlparse(url)._replace(query="", params="", fragment="").geturl()
-        _LOGGER.debug("Downloading from %r", url)
+        _LOGGER.debug("Downloading from %r", path)
         response = requests.get(url)
         if response.status_code == 403 and (urlparse(url).netloc in ("github.com", "githubusercontent.com")):
             raise GithubRateLimitError(f"Unable to download {url} due to rate limit ({response.status_code}): {response.text}")
@@ -251,5 +251,6 @@ def detect(path: str) -> bool:
             with open(tmpfile.name, "w") as f:
                 f.write(response.text)
 
-            return detect_file(tmpfile.name,  _real_path=path)    else:
+            return detect_file(tmpfile.name,  _real_path=path)    
+    else:
         raise UnknownFileError(f"The given path {path} is not a file, directory or URL")
