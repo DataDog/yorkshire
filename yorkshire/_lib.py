@@ -6,7 +6,9 @@ import os.path
 import logging
 import tempfile
 import json
+from typing import Generator
 from typing import Optional
+from typing import Tuple
 
 import requests
 import tomli
@@ -217,24 +219,24 @@ def detect_file(filepath: str, *, _real_path: Optional[str] = None) -> bool:
     return handler(filepath, _real_path=_real_path)
 
 
-def detect(path: str) -> bool:
+def detect(path: str) -> Generator[Tuple[str, bool], None, None]:
     """Detect possible dependency confusion in the specified path.
 
     @param path: A directory, file, or URL. The tool traverses the given directory structure, if a directory.
     @return: True if no possible issue was found, otherwise false.
     """
     if os.path.isdir(path):
-        okay = True
         _LOGGER.debug("Listing files in directory %r", path)
         for directory, _, files in os.walk(path, topdown=False):
             for file_name in files:
                 if file_name in _FILE_NAMES:
                     filepath = os.path.join(directory, file_name)
-                    okay &= detect_file(filepath)
-        return okay
+                    yield filepath, detect_file(filepath)
+        return None
     elif os.path.isfile(path):
         _LOGGER.debug("Checking file %r", path)
-        return detect_file(path)
+        yield path, detect_file(path)
+        return None
     elif path.startswith(("https://", "http://")):
         url = path
         path = urlparse(url)._replace(query="", params="", fragment="").geturl()
@@ -251,6 +253,7 @@ def detect(path: str) -> bool:
             with open(tmpfile.name, "w") as f:
                 f.write(response.text)
 
-            return detect_file(tmpfile.name, _real_path=path)
+            yield path, detect_file(tmpfile.name,  _real_path=path)
+            return None
     else:
         raise UnknownFileError(f"The given path {path} is not a file, directory or URL")

@@ -51,7 +51,7 @@ def cli(debug: bool = False) -> None:
 )
 def cli_detect(ctx: click.core.Context, path: str) -> None:
     """Check for a possible dependency confusion in a requirements file, files in a directory, or a URL."""
-    okay = yorkshire.detect(path)
+    okay = all([i[1] for i in yorkshire.detect(path)])
     ctx.exit(not okay)
 
 
