@@ -1,5 +1,4 @@
 Component,Origin,License,Copyright
-attrs,PyPI,MIT,Hynek Schlawack
 certifi,PyPI,MPL-2.0,Kenneth Reitz
 charset-normalizer,PyPI,MIT,Ahmed TAHRI
 click,PyPI,BSD-3-Clause,Armin Ronacher
