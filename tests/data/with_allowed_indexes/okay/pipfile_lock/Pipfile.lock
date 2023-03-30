@@ -12,6 +12,11 @@
                 "name": "pypi",
                 "url": "https://pypi.org/simple",
                 "verify_ssl": true
+            },
+            {
+                "name": "my_allowed_index",
+                "url": "https://my.allowed.index.org/simple",
+                "verify_ssl": true
             }
         ]
     },

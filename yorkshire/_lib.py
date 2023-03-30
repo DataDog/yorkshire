@@ -158,8 +158,14 @@ def _detect_pipfile_lock(filepath: str, *, index_url: Optional[Iterable[str]]=No
     with open(filepath) as f:
         content = json.load(f)
 
-    sources = content["_meta"]["sources"]
-    if len(sources) > 1:
+    sources = [
+        source for source in content["_meta"]["sources"] or []
+        if not index_url or source["url"] not in index_url
+    ]
+    # in pipenv there is always at least one source.
+    # However if people use the "index_url" option
+    # we expect them to include all their sources in it.
+    if (index_url and len(sources) > 0)  or len(sources) > 1:
         _LOGGER.warning(
             "File %r states one or multiple Python package indexes: %s",
             filepath,
