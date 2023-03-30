@@ -219,7 +219,10 @@ def _detect_requirements_txt(filepath: str, *, index_url: Optional[Iterable[str]
 
 
 def _detect_pdm_lock(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
-    """Detect possible dependency confusion in a pdm.lock file."""
+    """Detect possible dependency confusion in a pdm.lock file.
+
+    ``index_url`` is not used by this handler
+    """
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in pdm.lock file located at %r", os.path.dirname(real_filepath) or ".")
 
