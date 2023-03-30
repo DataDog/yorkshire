@@ -1,4 +1,5 @@
 -i https://pypi.org/simple
+-f https://my.allowed.index.org/simple
 
 requests
-pytorch
+torch-tensorrt

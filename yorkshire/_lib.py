@@ -186,12 +186,18 @@ def _detect_requirements(filepath: str, *, index_url: Optional[Iterable[str]]=No
     for item in items:
         if isinstance(item, OptionLine):
             extra_index_urls = item.options.get("extra_index_urls")
-            if extra_index_urls is not None:
+            if (
+                extra_index_urls is not None
+                and (not index_url or not all(x in index_url for x in extra_index_urls))
+            ):
                 _LOGGER.warning("File %r states one or multiple extra index URLs: %s", real_path, extra_index_urls)
                 return False
 
             find_links = item.options.get("find_links")
-            if find_links is not None:
+            if (
+                find_links is not None
+                and (not index_url or not all(x in index_url for x in find_links))
+            ):
                 _LOGGER.warning("File %r states --find-links: %r", real_path, find_links)
                 return False
 
@@ -202,14 +208,14 @@ def _detect_requirements_in(filepath: str, *, index_url: Optional[Iterable[str]]
     """Detect possible dependency confusion in a requirements.in file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in requirements.in file located at %r", os.path.dirname(real_filepath) or ".")
-    return _detect_requirements(filepath, real_path=real_filepath)
+    return _detect_requirements(filepath, index_url=index_url, real_path=real_filepath)
 
 
 def _detect_requirements_txt(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a requirements.txt file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in requirements.txt file located at %r", os.path.dirname(real_filepath) or ".")
-    return _detect_requirements(filepath, real_path=real_filepath)
+    return _detect_requirements(filepath, index_url=index_url, real_path=real_filepath)
 
 
 def _detect_pdm_lock(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
