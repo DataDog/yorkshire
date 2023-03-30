@@ -103,6 +103,18 @@ def _detect_setup_py(filepath: str, *, index_url: Optional[Iterable[str]]=None, 
         if isinstance(item, ast.Expr) and isinstance(item.value, ast.Call):
             for kwarg in item.value.keywords:
                 if kwarg.arg == "dependency_links":
+                    if index_url:
+                        if (
+                            isinstance(kwarg.value, ast.List)
+                            and all(
+                                # XXX assuming all list elements are constants;
+                                # if one element is not (typically, a variable name)
+                                # we will return False
+                                isinstance(elt, ast.Constant) and elt.value in index_url
+                                for elt in kwarg.value.elts
+                            )
+                        ):
+                            continue
                     _LOGGER.warning("File %r uses dependency links", real_filepath)
                     return False
 
