@@ -36,7 +36,10 @@ def _detect_pyproject_toml(filepath: str, *, index_url: Optional[Iterable[str]]=
         raise FileParseError(f"Failed to open and parse pyproject.toml file {real_filepath!r}: {str(exc)}") from exc
 
     # Check Poetry configuration.
-    poetry_source = ((content.get("tool") or {}).get("poetry") or {}).get("source") or []
+    poetry_source = [
+        source for source in ((content.get("tool") or {}).get("poetry") or {}).get("source") or []
+        if not index_url or source.get("url") not in index_url
+    ]
     if len(poetry_source) > 0:
         _LOGGER.warning(
             "File %r uses an explicitly configured Poetry source: %s",
@@ -46,12 +49,15 @@ def _detect_pyproject_toml(filepath: str, *, index_url: Optional[Iterable[str]]=
         return False
 
     # Check PDM configuration.
-    poetry_source = ((content.get("tool") or {}).get("pdm") or {}).get("source") or []
-    if len(poetry_source) > 0:
+    pdm_source = [
+        source for source in ((content.get("tool") or {}).get("pdm") or {}).get("source") or []
+        if not index_url or source.get("url") not in index_url
+    ]
+    if len(pdm_source) > 0:
         _LOGGER.warning(
             "File %r uses an explicitly configured PDM source: %s",
             real_filepath,
-            [i["url"] for i in poetry_source],
+            [i["url"] for i in pdm_source],
         )
         return False
 
