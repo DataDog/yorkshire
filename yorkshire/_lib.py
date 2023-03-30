@@ -73,7 +73,14 @@ def _detect_setup_cfg(filepath: str, *, index_url: Optional[Iterable[str]]=None,
     config.read(filepath)
 
     dependency_links = config["options"].get("dependency_links")
-    if dependency_links is not None:
+    if (
+        dependency_links is not None
+        # XXX will return False if "dependency_links" is a *list* of URLs
+        # even if they are all in the allowed list.
+        # TODO find the syntax for this list (comma separated?).
+        # See https://setuptools.pypa.io/en/latest/deprecated/dependency_links.html
+        and (index_url is None or dependency_links not in index_url)
+    ):
         _LOGGER.warning("File %r uses dependency links: %s", real_filepath, dependency_links)
         return False
 
