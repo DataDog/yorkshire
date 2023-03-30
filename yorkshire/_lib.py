@@ -6,7 +6,7 @@ import os.path
 import logging
 import tempfile
 import json
-from typing import Generator
+from typing import Generator, Iterable
 from typing import Optional
 from typing import Tuple
 
@@ -24,7 +24,7 @@ from .exceptions import GithubRateLimitError
 _LOGGER = logging.getLogger(__name__)
 
 
-def _detect_pyproject_toml(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_pyproject_toml(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a pyproject.toml file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in pyproject.toml file located at %r", os.path.dirname(real_filepath) or ".")
@@ -58,7 +58,7 @@ def _detect_pyproject_toml(filepath: str, *, _real_path: Optional[str] = None) -
     return True
 
 
-def _detect_setup_cfg(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_setup_cfg(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a setup.cfg file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in setup.cfg file located at %r", os.path.dirname(real_filepath) or ".")
@@ -74,7 +74,7 @@ def _detect_setup_cfg(filepath: str, *, _real_path: Optional[str] = None) -> boo
     return True
 
 
-def _detect_setup_py(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_setup_py(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a setup.py file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in setup.py file located at %r", os.path.dirname(real_filepath) or ".")
@@ -96,7 +96,7 @@ def _detect_setup_py(filepath: str, *, _real_path: Optional[str] = None) -> bool
     return True
 
 
-def _detect_pipfile(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_pipfile(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a Pipfile file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in Pipfile file located at %r", os.path.dirname(real_filepath) or ".")
@@ -119,7 +119,7 @@ def _detect_pipfile(filepath: str, *, _real_path: Optional[str] = None) -> bool:
     return True
 
 
-def _detect_pipfile_lock(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_pipfile_lock(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a Pipfile.lock file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in Pipfile.lock file located at %r", os.path.dirname(real_filepath) or ".")
@@ -139,7 +139,7 @@ def _detect_pipfile_lock(filepath: str, *, _real_path: Optional[str] = None) -> 
     return True
 
 
-def _detect_requirements(filepath: str, *, real_path: str) -> bool:
+def _detect_requirements(filepath: str, *, index_url: Optional[Iterable[str]]=None, real_path: str) -> bool:
     """Check requirements.{txt,in} files for a possible dependency confusion."""
     try:
         items = RequirementsFile.parse(filepath, include_nested=True, is_constraint=False)
@@ -161,21 +161,21 @@ def _detect_requirements(filepath: str, *, real_path: str) -> bool:
     return True
 
 
-def _detect_requirements_in(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_requirements_in(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a requirements.in file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in requirements.in file located at %r", os.path.dirname(real_filepath) or ".")
     return _detect_requirements(filepath, real_path=real_filepath)
 
 
-def _detect_requirements_txt(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_requirements_txt(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a requirements.txt file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in requirements.txt file located at %r", os.path.dirname(real_filepath) or ".")
     return _detect_requirements(filepath, real_path=real_filepath)
 
 
-def _detect_pdm_lock(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def _detect_pdm_lock(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a pdm.lock file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in pdm.lock file located at %r", os.path.dirname(real_filepath) or ".")
@@ -208,7 +208,7 @@ _FILE_NAMES = {
 }
 
 
-def detect_file(filepath: str, *, _real_path: Optional[str] = None) -> bool:
+def detect_file(filepath: str, *, index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in the given file."""
     file_name = os.path.basename(_real_path or filepath)
 
@@ -216,10 +216,10 @@ def detect_file(filepath: str, *, _real_path: Optional[str] = None) -> bool:
     if handler is None:
         raise UnknownFileError(f"Unknown requirements file {file_name!r}, supported are {list(_FILE_NAMES.keys())!r}")
 
-    return handler(filepath, _real_path=_real_path)
+    return handler(filepath, index_url=index_url, _real_path=_real_path)
 
 
-def detect(path: str) -> Generator[Tuple[str, bool], None, None]:
+def detect(path: str, index_url: Optional[Iterable[str]]=None) -> Generator[Tuple[str, bool], None, None]:
     """Detect possible dependency confusion in the specified path.
 
     @param path: A directory, file, or URL. The tool traverses the given directory structure, if a directory.
@@ -231,11 +231,11 @@ def detect(path: str) -> Generator[Tuple[str, bool], None, None]:
             for file_name in files:
                 if file_name in _FILE_NAMES:
                     filepath = os.path.join(directory, file_name)
-                    yield filepath, detect_file(filepath)
+                    yield filepath, detect_file(filepath, index_url=index_url)
         return None
     elif os.path.isfile(path):
         _LOGGER.debug("Checking file %r", path)
-        yield path, detect_file(path)
+        yield path, detect_file(path, index_url=index_url)
         return None
     elif path.startswith(("https://", "http://")):
         url = path
@@ -253,7 +253,7 @@ def detect(path: str) -> Generator[Tuple[str, bool], None, None]:
             with open(tmpfile.name, "w") as f:
                 f.write(response.text)
 
-            yield path, detect_file(tmpfile.name,  _real_path=path)
+            yield path, detect_file(tmpfile.name, index_url=index_url, _real_path=path)
             return None
     else:
         raise UnknownFileError(f"The given path {path} is not a file, directory or URL")
