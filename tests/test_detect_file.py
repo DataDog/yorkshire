@@ -10,6 +10,7 @@ from base import Base
 
 ALLOWED_INDEXES = {
     "https://my.allowed.index.org/simple",
+    'https://pypi.org/simple',
 }
 
 def _iter_files(directory: str) -> Generator[str, None, None]:

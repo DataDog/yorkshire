@@ -132,8 +132,14 @@ def _detect_pipfile(filepath: str, *, index_url: Optional[Iterable[str]]=None, _
     except Exception as exc:
         raise FileParseError(f"Failed to open and parse Pipfile file {real_filepath!r}: {str(exc)}") from exc
 
-    sources = content.get("source") or []
-    if len(sources) > 1:
+    sources = [
+        source for source in content.get("source") or []
+        if not index_url or source["url"] not in index_url
+    ]
+    # in pipenv there is always at least one source.
+    # However if people use the "index_url" option
+    # we expect them to include all their sources in it.
+    if (index_url and len(sources) > 0)  or len(sources) > 1:
         _LOGGER.warning(
             "File %r states one or multiple Python package indexes: %s",
             real_filepath,
