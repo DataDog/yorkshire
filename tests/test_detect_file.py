@@ -30,9 +30,12 @@ class TestDetectFile(Base):
             f"Test case for {filepath!r} should NOT be vulnerable to dependency confusion"
 
     @pytest.mark.parametrize("filepath", list(_iter_files(os.path.join(Base.DATA_DIR, "requirements_files", "fail"))))
-    def test_fail(self, filepath: str) -> None:
+    def test_fail(self, filepath: str, index_allowlist: bool) -> None:
         """Test all the failing scenarios."""
-        assert detect_file(filepath) is False, \
+
+        kwargs = { 'index_url': ALLOWED_INDEXES } if index_allowlist else {}
+
+        assert detect_file(filepath, **kwargs) is False, \
             f"Test case for {filepath!r} should be vulnerable to dependency confusion"
 
     @pytest.mark.parametrize("filepath", list(_iter_files(os.path.join(Base.DATA_DIR, "with_allowed_indexes", "okay"))))
