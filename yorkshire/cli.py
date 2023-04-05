@@ -51,13 +51,13 @@ def cli(debug: bool = False) -> None:
     metavar="FILE|URL|DIR",
 )
 @click.option(
-    '--index-url',
+    '--allowed-index',
     multiple=True,
     help="allow this particular index",
 )
-def cli_detect(ctx: click.core.Context, path: str, index_url: Iterable[str]) -> None:
+def cli_detect(ctx: click.core.Context, path: str, allowed_indexes: Iterable[str]) -> None:
     """Check for a possible dependency confusion in a requirements file, files in a directory, or a URL."""
-    okay = all([i[1] for i in yorkshire.detect(path, index_url)])
+    okay = all([i[1] for i in yorkshire.detect(path, allowed_indexes)])
     ctx.exit(not okay)
 
 
