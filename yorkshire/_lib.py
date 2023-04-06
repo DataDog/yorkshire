@@ -132,14 +132,20 @@ def _detect_pipfile(filepath: str, *, allowed_index_url: Optional[Iterable[str]]
     except Exception as exc:
         raise FileParseError(f"Failed to open and parse Pipfile file {real_filepath!r}: {str(exc)}") from exc
 
-    sources = [
-        source for source in content.get("source") or []
-        if not allowed_index_url or source["url"] not in allowed_index_url
-    ]
     # in pipenv there is always at least one source.
     # However if people use the "allowed_index_url" option
     # we expect them to include all their sources in it.
-    if (allowed_index_url and len(sources) > 0)  or len(sources) > 1:
+    if not allowed_index_url:
+        sources = content.get("source", [])
+        unexpected_sources = len(sources) > 1
+    else:
+        sources = list()
+        for s in content.get("source", []):
+            if s["url"] not in allowed_index_url:
+                sources.append(s)
+        unexpected_sources = len(sources) > 0
+
+    if unexpected_sources:
         _LOGGER.warning(
             "File %r states one or multiple Python package indexes: %s",
             real_filepath,
@@ -158,14 +164,20 @@ def _detect_pipfile_lock(filepath: str, *, allowed_index_url: Optional[Iterable[
     with open(filepath) as f:
         content = json.load(f)
 
-    sources = [
-        source for source in content["_meta"]["sources"] or []
-        if not allowed_index_url or source["url"] not in allowed_index_url
-    ]
     # in pipenv there is always at least one source.
     # However if people use the "allowed_index_url" option
     # we expect them to include all their sources in it.
-    if (allowed_index_url and len(sources) > 0)  or len(sources) > 1:
+    if not allowed_index_url:
+        sources = content["_meta"].get("sources", [])
+        unexpected_sources = len(sources) > 1
+    else:
+        sources = list()
+        for s in content["_meta"].get("sources", []):
+            if s["url"] not in allowed_index_url:
+                sources.append(s)
+        unexpected_sources = len(sources) > 0
+
+    if unexpected_sources:
         _LOGGER.warning(
             "File %r states one or multiple Python package indexes: %s",
             filepath,
