@@ -8,7 +8,7 @@ from yorkshire import detect_file
 
 from base import Base
 
-ALLOWED_INDEXES = {
+ALLOWED_INDEX_URLS = {
     "https://my.allowed.index.org/simple",
     'https://pypi.org/simple',
 }
@@ -33,13 +33,13 @@ class TestDetectFile(Base):
     def test_fail(self, filepath: str, index_allowlist: bool) -> None:
         """Test all the failing scenarios."""
 
-        kwargs = { 'allowed_indexes': ALLOWED_INDEXES } if index_allowlist else {}
+        kwargs = { 'allowed_index_url': ALLOWED_INDEX_URLS } if index_allowlist else {}
 
         assert detect_file(filepath, **kwargs) is False, \
             f"Test case for {filepath!r} should be vulnerable to dependency confusion"
 
-    @pytest.mark.parametrize("filepath", list(_iter_files(os.path.join(Base.DATA_DIR, "with_allowed_indexes", "okay"))))
+    @pytest.mark.parametrize("filepath", list(_iter_files(os.path.join(Base.DATA_DIR, "with_allowed_index_url", "okay"))))
     def test_allowlist_okay(self, filepath: str) -> None:
         """test all the successful scenarios with allowed indexes."""
-        assert detect_file(filepath, allowed_indexes=ALLOWED_INDEXES) is True, \
+        assert detect_file(filepath, allowed_index_url=ALLOWED_INDEX_URLS) is True, \
             f"Test case for {filepath!r} should NOT be vulnerable to dependency confusion"

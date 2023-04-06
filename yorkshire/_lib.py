@@ -24,7 +24,7 @@ from .exceptions import GithubRateLimitError
 _LOGGER = logging.getLogger(__name__)
 
 
-def _detect_pyproject_toml(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_pyproject_toml(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a pyproject.toml file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in pyproject.toml file located at %r", os.path.dirname(real_filepath) or ".")
@@ -38,7 +38,7 @@ def _detect_pyproject_toml(filepath: str, *, allowed_indexes: Optional[Iterable[
     # Check Poetry configuration.
     poetry_source = [
         source for source in ((content.get("tool") or {}).get("poetry") or {}).get("source") or []
-        if not allowed_indexes or source.get("url") not in allowed_indexes
+        if not allowed_index_url or source.get("url") not in allowed_index_url
     ]
     if len(poetry_source) > 0:
         _LOGGER.warning(
@@ -51,7 +51,7 @@ def _detect_pyproject_toml(filepath: str, *, allowed_indexes: Optional[Iterable[
     # Check PDM configuration.
     pdm_source = [
         source for source in ((content.get("tool") or {}).get("pdm") or {}).get("source") or []
-        if not allowed_indexes or source.get("url") not in allowed_indexes
+        if not allowed_index_url or source.get("url") not in allowed_index_url
     ]
     if len(pdm_source) > 0:
         _LOGGER.warning(
@@ -64,7 +64,7 @@ def _detect_pyproject_toml(filepath: str, *, allowed_indexes: Optional[Iterable[
     return True
 
 
-def _detect_setup_cfg(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_setup_cfg(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a setup.cfg file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in setup.cfg file located at %r", os.path.dirname(real_filepath) or ".")
@@ -79,7 +79,7 @@ def _detect_setup_cfg(filepath: str, *, allowed_indexes: Optional[Iterable[str]]
         # even if they are all in the allowed list.
         # TODO find the syntax for this list (comma separated?).
         # See https://setuptools.pypa.io/en/latest/deprecated/dependency_links.html
-        and (allowed_indexes is None or dependency_links not in allowed_indexes)
+        and (allowed_index_url is None or dependency_links not in allowed_index_url)
     ):
         _LOGGER.warning("File %r uses dependency links: %s", real_filepath, dependency_links)
         return False
@@ -87,7 +87,7 @@ def _detect_setup_cfg(filepath: str, *, allowed_indexes: Optional[Iterable[str]]
     return True
 
 
-def _detect_setup_py(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_setup_py(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a setup.py file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in setup.py file located at %r", os.path.dirname(real_filepath) or ".")
@@ -103,14 +103,14 @@ def _detect_setup_py(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=
         if isinstance(item, ast.Expr) and isinstance(item.value, ast.Call):
             for kwarg in item.value.keywords:
                 if kwarg.arg == "dependency_links":
-                    if allowed_indexes:
+                    if allowed_index_url:
                         if (
                             isinstance(kwarg.value, ast.List)
                             and all(
                                 # XXX assuming all list elements are constants;
                                 # if one element is not (typically, a variable name)
                                 # we will return False
-                                isinstance(elt, ast.Constant) and elt.value in allowed_indexes
+                                isinstance(elt, ast.Constant) and elt.value in allowed_index_url
                                 for elt in kwarg.value.elts
                             )
                         ):
@@ -121,7 +121,7 @@ def _detect_setup_py(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=
     return True
 
 
-def _detect_pipfile(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_pipfile(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a Pipfile file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in Pipfile file located at %r", os.path.dirname(real_filepath) or ".")
@@ -134,12 +134,12 @@ def _detect_pipfile(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=N
 
     sources = [
         source for source in content.get("source") or []
-        if not allowed_indexes or source["url"] not in allowed_indexes
+        if not allowed_index_url or source["url"] not in allowed_index_url
     ]
     # in pipenv there is always at least one source.
-    # However if people use the "allowed_indexes" option
+    # However if people use the "allowed_index_url" option
     # we expect them to include all their sources in it.
-    if (allowed_indexes and len(sources) > 0)  or len(sources) > 1:
+    if (allowed_index_url and len(sources) > 0)  or len(sources) > 1:
         _LOGGER.warning(
             "File %r states one or multiple Python package indexes: %s",
             real_filepath,
@@ -150,7 +150,7 @@ def _detect_pipfile(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=N
     return True
 
 
-def _detect_pipfile_lock(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_pipfile_lock(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a Pipfile.lock file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in Pipfile.lock file located at %r", os.path.dirname(real_filepath) or ".")
@@ -160,12 +160,12 @@ def _detect_pipfile_lock(filepath: str, *, allowed_indexes: Optional[Iterable[st
 
     sources = [
         source for source in content["_meta"]["sources"] or []
-        if not allowed_indexes or source["url"] not in allowed_indexes
+        if not allowed_index_url or source["url"] not in allowed_index_url
     ]
     # in pipenv there is always at least one source.
-    # However if people use the "allowed_indexes" option
+    # However if people use the "allowed_index_url" option
     # we expect them to include all their sources in it.
-    if (allowed_indexes and len(sources) > 0)  or len(sources) > 1:
+    if (allowed_index_url and len(sources) > 0)  or len(sources) > 1:
         _LOGGER.warning(
             "File %r states one or multiple Python package indexes: %s",
             filepath,
@@ -176,7 +176,7 @@ def _detect_pipfile_lock(filepath: str, *, allowed_indexes: Optional[Iterable[st
     return True
 
 
-def _detect_requirements(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, real_path: str) -> bool:
+def _detect_requirements(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, real_path: str) -> bool:
     """Check requirements.{txt,in} files for a possible dependency confusion."""
     try:
         items = RequirementsFile.parse(filepath, include_nested=True, is_constraint=False)
@@ -188,7 +188,7 @@ def _detect_requirements(filepath: str, *, allowed_indexes: Optional[Iterable[st
             extra_index_urls = item.options.get("extra_index_urls")
             if (
                 extra_index_urls is not None
-                and (not allowed_indexes or not all(x in allowed_indexes for x in extra_index_urls))
+                and (not allowed_index_url or not all(x in allowed_index_url for x in extra_index_urls))
             ):
                 _LOGGER.warning("File %r states one or multiple extra index URLs: %s", real_path, extra_index_urls)
                 return False
@@ -196,7 +196,7 @@ def _detect_requirements(filepath: str, *, allowed_indexes: Optional[Iterable[st
             find_links = item.options.get("find_links")
             if (
                 find_links is not None
-                and (not allowed_indexes or not all(x in allowed_indexes for x in find_links))
+                and (not allowed_index_url or not all(x in allowed_index_url for x in find_links))
             ):
                 _LOGGER.warning("File %r states --find-links: %r", real_path, find_links)
                 return False
@@ -204,24 +204,24 @@ def _detect_requirements(filepath: str, *, allowed_indexes: Optional[Iterable[st
     return True
 
 
-def _detect_requirements_in(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_requirements_in(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a requirements.in file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in requirements.in file located at %r", os.path.dirname(real_filepath) or ".")
-    return _detect_requirements(filepath, allowed_indexes=allowed_indexes, real_path=real_filepath)
+    return _detect_requirements(filepath, allowed_index_url=allowed_index_url, real_path=real_filepath)
 
 
-def _detect_requirements_txt(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_requirements_txt(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a requirements.txt file."""
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in requirements.txt file located at %r", os.path.dirname(real_filepath) or ".")
-    return _detect_requirements(filepath, allowed_indexes=allowed_indexes, real_path=real_filepath)
+    return _detect_requirements(filepath, allowed_index_url=allowed_index_url, real_path=real_filepath)
 
 
-def _detect_pdm_lock(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def _detect_pdm_lock(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in a pdm.lock file.
 
-    ``allowed_indexes`` is not used by this handler
+    ``allowed_index_url`` is not used by this handler
     """
     real_filepath = _real_path or filepath
     _LOGGER.info("Performing detection in pdm.lock file located at %r", os.path.dirname(real_filepath) or ".")
@@ -254,7 +254,7 @@ _FILE_NAMES = {
 }
 
 
-def detect_file(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
+def detect_file(filepath: str, *, allowed_index_url: Optional[Iterable[str]]=None, _real_path: Optional[str] = None) -> bool:
     """Detect possible dependency confusion in the given file."""
     file_name = os.path.basename(_real_path or filepath)
 
@@ -262,10 +262,10 @@ def detect_file(filepath: str, *, allowed_indexes: Optional[Iterable[str]]=None,
     if handler is None:
         raise UnknownFileError(f"Unknown requirements file {file_name!r}, supported are {list(_FILE_NAMES.keys())!r}")
 
-    return handler(filepath, allowed_indexes=allowed_indexes, _real_path=_real_path)
+    return handler(filepath, allowed_index_url=allowed_index_url, _real_path=_real_path)
 
 
-def detect(path: str, allowed_indexes: Optional[Iterable[str]]=None) -> Generator[Tuple[str, bool], None, None]:
+def detect(path: str, allowed_index_url: Optional[Iterable[str]]=None) -> Generator[Tuple[str, bool], None, None]:
     """Detect possible dependency confusion in the specified path.
 
     @param path: A directory, file, or URL. The tool traverses the given directory structure, if a directory.
@@ -277,11 +277,11 @@ def detect(path: str, allowed_indexes: Optional[Iterable[str]]=None) -> Generato
             for file_name in files:
                 if file_name in _FILE_NAMES:
                     filepath = os.path.join(directory, file_name)
-                    yield filepath, detect_file(filepath, allowed_indexes=allowed_indexes)
+                    yield filepath, detect_file(filepath, allowed_index_url=allowed_index_url)
         return None
     elif os.path.isfile(path):
         _LOGGER.debug("Checking file %r", path)
-        yield path, detect_file(path, allowed_indexes=allowed_indexes)
+        yield path, detect_file(path, allowed_index_url=allowed_index_url)
         return None
     elif path.startswith(("https://", "http://")):
         url = path
@@ -299,7 +299,7 @@ def detect(path: str, allowed_indexes: Optional[Iterable[str]]=None) -> Generato
             with open(tmpfile.name, "w") as f:
                 f.write(response.text)
 
-            yield path, detect_file(tmpfile.name, allowed_indexes=allowed_indexes, _real_path=path)
+            yield path, detect_file(tmpfile.name, allowed_index_url=allowed_index_url, _real_path=path)
             return None
     else:
         raise UnknownFileError(f"The given path {path} is not a file, directory or URL")

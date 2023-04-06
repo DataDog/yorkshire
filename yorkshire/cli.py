@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
-from typing import Iterable
+from typing import Tuple
 
 import yorkshire
 import rich_click as click
@@ -51,13 +51,13 @@ def cli(debug: bool = False) -> None:
     metavar="FILE|URL|DIR",
 )
 @click.option(
-    '--allowed-index',
+    '--allowed-index-url',
     multiple=True,
     help="allow this particular index",
 )
-def cli_detect(ctx: click.core.Context, path: str, allowed_indexes: Iterable[str]) -> None:
+def cli_detect(ctx: click.core.Context, path: str, allowed_index_url: Tuple[str]) -> None:
     """Check for a possible dependency confusion in a requirements file, files in a directory, or a URL."""
-    okay = all([i[1] for i in yorkshire.detect(path, allowed_indexes)])
+    okay = all([i[1] for i in yorkshire.detect(path, allowed_index_url)])
     ctx.exit(not okay)
 
 
