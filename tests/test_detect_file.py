@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from typing import Generator
+from typing import Generator, Union
 
 import pytest
 from yorkshire import detect_file
@@ -30,10 +30,11 @@ class TestDetectFile(Base):
             f"Test case for {filepath!r} should NOT be vulnerable to dependency confusion"
 
     @pytest.mark.parametrize("filepath", list(_iter_files(os.path.join(Base.DATA_DIR, "requirements_files", "fail"))))
-    def test_fail(self, filepath: str, index_allowlist: bool) -> None:
+    @pytest.mark.parametrize("index_allowlist", [ALLOWED_INDEX_URLS, None])
+    def test_fail(self, filepath: str, index_allowlist: Union[set, None]) -> None:
         """Test all the failing scenarios."""
 
-        kwargs = { 'allowed_index_url': ALLOWED_INDEX_URLS } if index_allowlist else {}
+        kwargs = { 'allowed_index_url': index_allowlist } if index_allowlist else {}
 
         assert detect_file(filepath, **kwargs) is False, \
             f"Test case for {filepath!r} should be vulnerable to dependency confusion"
